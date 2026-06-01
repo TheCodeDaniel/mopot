@@ -1,0 +1,161 @@
+{
+  "_comment": "Mopot — UiPath Maestro BPMN Process Definition. Import this into UiPath Automation Cloud > Maestro > New Process.",
+  "name": "Mopot Pipeline",
+  "version": "1.0.0",
+  "description": "Autonomous mobile release pipeline: GitHub push → Test → Fix → Deploy",
+  "trigger": {
+    "type": "webhook",
+    "name": "GitHub Push Webhook",
+    "config": {
+      "endpoint": "POST /webhook/github",
+      "secret_asset": "WEBHOOK_SECRET",
+      "_note": "Configure the GitHub repo webhook to point at your Mopot server URL"
+    }
+  },
+  "process": {
+    "activities": [
+      {
+        "id": "task_build",
+        "name": "Build APK",
+        "type": "InvokeProcess",
+        "config": {
+          "command": "python",
+          "args": ["-m", "agents.tester_agent"],
+          "working_directory": "${FLUTTER_PROJECT_PATH}",
+          "credential_assets": ["ANTHROPIC_API_KEY", "GITHUB_TOKEN"],
+          "output_variable": "build_result"
+        }
+      },
+      {
+        "id": "task_test",
+        "name": "Test App (Claude Vision)",
+        "type": "InvokeProcess",
+        "config": {
+          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
+          "wait_for_status": "testing",
+          "output_variable": "bug_report"
+        },
+        "depends_on": ["task_build"]
+      },
+      {
+        "id": "action_gate_1",
+        "name": "Human Approval — Auto Fix?",
+        "type": "ActionCenter",
+        "config": {
+          "task_type": "ApproveAutoFix",
+          "title": "Mopot found ${bug_count} bug(s) — approve auto-fix?",
+          "description": "Review the bug report and screenshots below, then approve or reject the automated fix attempt.",
+          "data_fields": [
+            {"name": "bug_report", "value": "${bug_report}"},
+            {"name": "screenshots", "value": "${screenshots}"}
+          ],
+          "assignees": ["${DEVELOPER_EMAIL}"],
+          "timeout_hours": 24
+        },
+        "depends_on": ["task_test"]
+      },
+      {
+        "id": "task_fix",
+        "name": "Fix Bugs (Claude Code)",
+        "type": "InvokeProcess",
+        "config": {
+          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
+          "body": {"action": "fix", "run_id": "${run_id}"},
+          "output_variable": "fix_result"
+        },
+        "depends_on": ["action_gate_1"],
+        "condition": "${action_gate_1.approved} == true"
+      },
+      {
+        "id": "task_retest",
+        "name": "Retest on Fixed Build",
+        "type": "InvokeProcess",
+        "config": {
+          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
+          "body": {"action": "retest", "run_id": "${run_id}"},
+          "max_retries": 2,
+          "output_variable": "retest_result"
+        },
+        "depends_on": ["task_fix"]
+      },
+      {
+        "id": "action_gate_2",
+        "name": "Human Approval — Deploy?",
+        "type": "ActionCenter",
+        "config": {
+          "task_type": "ApproveDeployment",
+          "title": "All tests passing — approve deployment to Play Store?",
+          "description": "Review the fix summary and test results below, then approve or reject deployment.",
+          "data_fields": [
+            {"name": "fix_summary", "value": "${fix_result}"},
+            {"name": "test_results", "value": "${retest_result}"},
+            {"name": "pr_url", "value": "${fix_result.pr_url}"}
+          ],
+          "assignees": ["${DEVELOPER_EMAIL}"],
+          "timeout_hours": 24
+        },
+        "depends_on": ["task_retest"]
+      },
+      {
+        "id": "task_assets",
+        "name": "Generate Release Assets (Claude)",
+        "type": "InvokeProcess",
+        "config": {
+          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
+          "body": {"action": "assets", "run_id": "${run_id}"},
+          "output_variable": "asset_package"
+        },
+        "depends_on": ["action_gate_2"],
+        "condition": "${action_gate_2.approved} == true"
+      },
+      {
+        "id": "task_deploy",
+        "name": "Deploy to Play Store",
+        "type": "InvokeProcess",
+        "config": {
+          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
+          "body": {"action": "deploy", "run_id": "${run_id}"},
+          "credential_assets": ["PLAY_STORE_JSON"],
+          "output_variable": "deploy_result"
+        },
+        "depends_on": ["task_assets"]
+      },
+      {
+        "id": "task_notify",
+        "name": "Notify Developer",
+        "type": "SendEmail",
+        "config": {
+          "to": "${DEVELOPER_EMAIL}",
+          "subject": "Mopot: Release ${run_id} ${deploy_result.success ? 'shipped' : 'failed'}",
+          "body_template": "email_notification.html",
+          "credential_assets": ["SMTP_CREDENTIALS"]
+        },
+        "depends_on": ["task_deploy"]
+      }
+    ],
+    "variables": {
+      "MOPOT_PORT": {"default": "7432", "asset": "MOPOT_PORT"},
+      "FLUTTER_PROJECT_PATH": {"asset": "FLUTTER_PROJECT_PATH"},
+      "DEVELOPER_EMAIL": {"asset": "DEVELOPER_EMAIL"},
+      "run_id": {"generated": true, "type": "uuid"}
+    }
+  },
+  "credential_assets_required": [
+    "ANTHROPIC_API_KEY",
+    "GITHUB_TOKEN",
+    "PLAY_STORE_JSON",
+    "WEBHOOK_SECRET",
+    "FLUTTER_PROJECT_PATH",
+    "GITHUB_REPO",
+    "GITHUB_DEFAULT_BRANCH",
+    "PLAY_STORE_PACKAGE_NAME",
+    "DEVELOPER_EMAIL"
+  ],
+  "_setup_instructions": [
+    "1. Import this file in UiPath Automation Cloud > Maestro > Import Process",
+    "2. Create all credential_assets_required in Orchestrator > Assets",
+    "3. Configure your GitHub repo webhook to POST to https://your-robot-ip:7432/webhook/github",
+    "4. Set the webhook secret to match your WEBHOOK_SECRET asset",
+    "5. Ensure your UiPath Robot is connected and the Python agents are deployed"
+  ]
+}

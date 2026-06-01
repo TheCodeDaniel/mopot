@@ -1,0 +1,43 @@
+{
+  "name": "mopot",
+  "version": "1.0.0",
+  "description": "Autonomous mobile release pipeline agent — push code, Mopot ships it.",
+  "type": "module",
+  "bin": {
+    "mopot": "./cli/index.js"
+  },
+  "main": "./cli/index.js",
+  "scripts": {
+    "start": "node cli/index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "express": "^4.19.2",
+    "axios": "^1.7.2",
+    "open": "^10.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "cli-table3": "^0.6.5",
+    "conf": "^13.0.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "author": "Daniel Ainoko / THECODEDANIEL LIMITED",
+  "keywords": [
+    "mobile",
+    "release",
+    "pipeline",
+    "flutter",
+    "android",
+    "uipath",
+    "claude",
+    "anthropic"
+  ]
+}

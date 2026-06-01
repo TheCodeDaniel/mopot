@@ -1,0 +1,63 @@
+{
+  "_comment": "UiPath Test Cloud integration config for Mopot. Import in UiPath Test Cloud > Projects > New Project.",
+  "project": {
+    "name": "Mopot Flutter Tests",
+    "description": "Automated test suite for the target Flutter Android application",
+    "framework": "flutter",
+    "platform": "android"
+  },
+  "test_execution": {
+    "command": "flutter test --reporter json",
+    "working_directory": "${FLUTTER_PROJECT_PATH}",
+    "output": {
+      "format": "junit_xml",
+      "path": "/tmp/mopot/${run_id}/test_results.xml",
+      "_note": "tester_agent.py converts flutter JSON output to JUnit XML via convert_flutter_json_to_junit_xml()"
+    },
+    "timeout_seconds": 300,
+    "environment": {
+      "FLUTTER_PROJECT_PATH": "${FLUTTER_PROJECT_PATH}"
+    }
+  },
+  "test_suites": [
+    {
+      "name": "Widget Tests",
+      "path": "test/widget_test.dart",
+      "type": "widget"
+    },
+    {
+      "name": "Unit Tests",
+      "path": "test/",
+      "type": "unit",
+      "exclude": ["test/widget_test.dart", "test/integration/"]
+    },
+    {
+      "name": "Integration Tests",
+      "path": "integration_test/",
+      "type": "integration",
+      "device": {
+        "platform": "android",
+        "avd": "${MOPOT_AVD}",
+        "api_level": 34
+      }
+    }
+  ],
+  "triggers": {
+    "on_pr_open": true,
+    "on_push_to_branch": ["main", "mopot/fix-*"],
+    "scheduled": false
+  },
+  "reporting": {
+    "upload_to_test_cloud": true,
+    "create_execution_record": true,
+    "attach_screenshots": true,
+    "screenshot_source": "/tmp/mopot/${run_id}/"
+  },
+  "_setup_instructions": [
+    "1. In UiPath Test Cloud, create a new project and import this config",
+    "2. Set FLUTTER_PROJECT_PATH to the absolute path of your Flutter project",
+    "3. Set MOPOT_AVD to your Android Virtual Device name (e.g. Pixel_9_Pro)",
+    "4. Connect your UiPath Robot so it can execute flutter test commands",
+    "5. The tester_agent.py calls run_tests() which outputs results to the configured path"
+  ]
+}

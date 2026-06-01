@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  mopot:
+    build: .
+    ports:
+      - "${MOPOT_PORT:-7432}:7432"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - PLAY_STORE_JSON_PATH=/secrets/play_store.json
+      - PLAY_STORE_PACKAGE_NAME=${PLAY_STORE_PACKAGE_NAME}
+      - FLUTTER_PROJECT_PATH=${FLUTTER_PROJECT_PATH}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - GITHUB_DEFAULT_BRANCH=${GITHUB_DEFAULT_BRANCH:-main}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - MOPOT_AVD=${MOPOT_AVD:-mopot_avd}
+      - MOPOT_PORT=7432
+    volumes:
+      - ${PLAY_STORE_JSON_PATH:-/dev/null}:/secrets/play_store.json:ro
+      - mopot_runs:/root/.mopot/runs
+      - ${FLUTTER_PROJECT_PATH:-/tmp}:${FLUTTER_PROJECT_PATH:-/tmp}
+    # Linux only: enable KVM for Android emulator hardware acceleration
+    # Uncomment on Linux hosts:
+    # devices:
+    #   - /dev/kvm
+
+volumes:
+  mopot_runs:

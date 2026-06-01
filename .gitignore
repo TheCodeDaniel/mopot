@@ -1,0 +1,32 @@
+# Secrets — never commit
+.env
+*.json.key
+play_store_credentials.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Mopot runtime
+/tmp/mopot/
+~/.mopot/
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Flutter (sample app build artifacts)
+tests/sample_flutter_app/build/
+tests/sample_flutter_app/.dart_tool/
+tests/sample_flutter_app/.flutter-plugins
+tests/sample_flutter_app/.flutter-plugins-dependencies

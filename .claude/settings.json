@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(adb version *)",
+      "Bash(pip3 show *)",
+      "Bash(flutter sdk-path *)",
+      "Bash(npm list *)",
+      "Bash(adb devices *)",
+      "Bash(emulator -list-avds)",
+      "Bash(flutter doctor *)",
+      "Bash(flutter create *)",
+      "Bash(python -c \"from platforms.android_adapter import AndroidAdapter; from platforms.ios_adapter import IOSAdapter; from platforms.react_native_adapter import ReactNativeAdapter; print\\('Platform adapters: OK'\\)\")",
+      "Bash(python3 -c \"from platforms.android_adapter import AndroidAdapter; from platforms.ios_adapter import IOSAdapter; from platforms.react_native_adapter import ReactNativeAdapter; print\\('Platform adapters: OK'\\)\")",
+      "Bash(python3 -c \"from agents.tester_agent import run_tester, convert_flutter_json_to_junit_xml; from agents.fixer_agent import run_fixer; from agents.asset_agent import run_asset_agent; from agents.deployer_agent import run_deployer; print\\('Agents: OK'\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(python3 -c \"from agents.tester_agent import run_tester, convert_flutter_json_to_junit_xml; from agents.fixer_agent import run_fixer; from agents.asset_agent import run_asset_agent; print\\('Agents: OK'\\)\")",
+      "Bash(python3 -c \"from agents.deployer_agent import run_deployer; print\\('Deployer: OK'\\)\")",
+      "Bash(python3 -c \"from webhook.main import app; print\\('Webhook server: OK'\\)\")",
+      "Bash(node cli/index.js --help)",
+      "Bash(uvicorn webhook.main:app --port 7499 --log-level error)",
+      "Bash(curl -s http://localhost:7499/health)",
+      "Bash(kill %1)",
+      "Bash(flutter test *)"
+    ]
+  }
+}
