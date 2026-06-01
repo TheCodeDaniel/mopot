@@ -195,11 +195,11 @@ Run `flutter test` inside that directory to see all three tests fail before Mopo
 
 - **Event**: UiPath AgentHack 2026
 - **Track**: Track 3 — UiPath Test Cloud
-- **Builder**: Daniel Ainoko / THECODEDANIEL LIMITED
+- **Builder**: Daniel Ainoko / thecodedaniel
 - **Deadline**: June 29, 2026
 
 ---
 
 ## License
 
-MIT © Daniel Ainoko / THECODEDANIEL LIMITED
+MIT © Daniel Ainoko / thecodedaniel

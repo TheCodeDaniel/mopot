@@ -20,7 +20,8 @@
       "Bash(uvicorn webhook.main:app --port 7499 --log-level error)",
       "Bash(curl -s http://localhost:7499/health)",
       "Bash(kill %1)",
-      "Bash(flutter test *)"
+      "Bash(flutter test *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

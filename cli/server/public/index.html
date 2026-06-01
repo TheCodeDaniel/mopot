@@ -72,8 +72,17 @@
       transition: border-color 0.2s;
     }
     input:focus { border-color: #7c6af7; }
+    input.invalid { border-color: #e05555 !important; }
+    textarea.invalid { border-color: #e05555 !important; }
 
     .field { margin-bottom: 16px; }
+    .field-error {
+      font-size: 12px;
+      color: #e05555;
+      margin-top: 5px;
+      display: none;
+    }
+    .field-error.visible { display: block; }
     .hint { font-size: 12px; color: #555; margin-top: 4px; }
     .hint a { color: #7c6af7; text-decoration: none; }
 
@@ -162,11 +171,13 @@
     <p class="desc">Connect to your UiPath Automation Cloud. A free Community Edition account works.</p>
     <div class="field">
       <label>Cloud Account URL</label>
-      <input type="url" id="uipath-url" placeholder="https://cloud.uipath.com/yourorg" />
+      <input type="url" id="uipath-url" placeholder="https://cloud.uipath.com/yourorg" oninput="clearErr('uipath-url')" />
+      <div class="field-error" id="uipath-url-err"></div>
     </div>
     <div class="field">
       <label>Personal Access Token</label>
-      <input type="password" id="uipath-pat" placeholder="rt_..." />
+      <input type="password" id="uipath-pat" placeholder="rt_..." oninput="clearErr('uipath-pat')" />
+      <div class="field-error" id="uipath-pat-err"></div>
       <div class="hint">Generate at cloud.uipath.com → Profile → Access Tokens (scopes: OR.Execution, OR.Assets)</div>
     </div>
     <button class="btn-test" onclick="testUiPath()">Test Connection</button>
@@ -180,7 +191,8 @@
     <p class="desc">Claude powers the testing, fixing, and asset generation steps.</p>
     <div class="field">
       <label>API Key</label>
-      <input type="password" id="anthropic-key" placeholder="sk-ant-api03-..." />
+      <input type="password" id="anthropic-key" placeholder="sk-ant-api03-..." oninput="clearErr('anthropic-key')" />
+      <div class="field-error" id="anthropic-key-err"></div>
       <div class="hint"><a href="https://console.anthropic.com" target="_blank">Get your key at console.anthropic.com</a></div>
     </div>
     <button class="btn-test" onclick="testAnthropic()">Test Key</button>
@@ -197,7 +209,8 @@
     <p class="desc">Mopot reads your repo, commits fixes, and opens Pull Requests on your behalf.</p>
     <div class="field">
       <label>Personal Access Token</label>
-      <input type="password" id="github-token" placeholder="ghp_..." />
+      <input type="password" id="github-token" placeholder="ghp_..." oninput="clearErr('github-token')" />
+      <div class="field-error" id="github-token-err"></div>
       <div class="hint">
         <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank">Generate at github.com/settings/tokens</a>
         — needs <code>repo</code> scope
@@ -205,7 +218,8 @@
     </div>
     <div class="field">
       <label>Repository (owner/repo)</label>
-      <input type="text" id="github-repo" placeholder="yourname/your-flutter-app" />
+      <input type="text" id="github-repo" placeholder="yourname/your-flutter-app" oninput="clearErr('github-repo')" />
+      <div class="field-error" id="github-repo-err"></div>
     </div>
     <button class="btn-test" onclick="testGitHub()">Test Connection</button>
     <div class="status" id="github-status"></div>
@@ -221,7 +235,8 @@
     <p class="desc">Paste your Google Cloud service account JSON to enable Play Store deployment.</p>
     <div class="field">
       <label>Service Account JSON</label>
-      <textarea id="play-json" placeholder='{"type": "service_account", "project_id": "...", ...}'></textarea>
+      <textarea id="play-json" placeholder='{"type": "service_account", "project_id": "...", ...}' oninput="clearErr('play-json')"></textarea>
+      <div class="field-error" id="play-json-err"></div>
       <div class="hint">
         Create in <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">Google Cloud Console</a>
         → Service Accounts → Keys → JSON. Then grant Release Manager in Play Console → Setup → API access.
@@ -229,7 +244,8 @@
     </div>
     <div class="field">
       <label>Play Store Package Name</label>
-      <input type="text" id="package-name" placeholder="com.example.myapp" />
+      <input type="text" id="package-name" placeholder="com.example.myapp" oninput="clearErr('package-name')" />
+      <div class="field-error" id="package-name-err"></div>
     </div>
     <button class="btn-test" onclick="validatePlayJson()">Validate JSON</button>
     <div class="status" id="play-status"></div>
@@ -245,15 +261,18 @@
     <p class="desc">Tell Mopot where your Flutter app lives and which branch to watch.</p>
     <div class="field">
       <label>Flutter Project Path (absolute)</label>
-      <input type="text" id="flutter-path" placeholder="/Users/you/projects/myapp" />
+      <input type="text" id="flutter-path" placeholder="/Users/you/projects/myapp" oninput="clearErr('flutter-path')" />
+      <div class="field-error" id="flutter-path-err"></div>
     </div>
     <div class="field">
       <label>Default Branch</label>
-      <input type="text" id="default-branch" value="main" />
+      <input type="text" id="default-branch" value="main" oninput="clearErr('default-branch')" />
+      <div class="field-error" id="default-branch-err"></div>
     </div>
     <div class="field">
       <label>AVD Name (Android Virtual Device)</label>
-      <input type="text" id="avd-name" placeholder="Pixel_9_Pro" value="Pixel_9_Pro" />
+      <input type="text" id="avd-name" placeholder="Pixel_9_Pro" value="Pixel_9_Pro" oninput="clearErr('avd-name')" />
+      <div class="field-error" id="avd-name-err"></div>
       <div class="hint">Run <code>emulator -list-avds</code> to see available AVDs</div>
     </div>
     <button class="btn-test" onclick="verifyFlutter()">Verify Flutter Project</button>
@@ -282,6 +301,8 @@
   let currentStep = 1;
   const TOTAL = 5;
 
+  // ── UI helpers ──────────────────────────────────────────────────────────────
+
   function showStep(n) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById(`step-${n === 'done' ? 'done' : n}`).classList.add('active');
@@ -291,14 +312,140 @@
     }
   }
 
-  function next(from) { currentStep = from + 1; showStep(currentStep); }
-  function prev(from) { currentStep = from - 1; showStep(currentStep); }
-
   function setStatus(id, ok, msg) {
     const el = document.getElementById(id);
     el.className = 'status ' + (ok ? 'ok' : 'err');
     el.textContent = ok ? '✅ ' + msg : '❌ ' + msg;
   }
+
+  // Show a field-level error and mark the input red
+  function fieldErr(inputId, msg) {
+    const input = document.getElementById(inputId);
+    const errEl = document.getElementById(inputId + '-err');
+    input.classList.add('invalid');
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('visible'); }
+  }
+
+  // Clear a field error (called on every keystroke via oninput)
+  function clearErr(inputId) {
+    const input = document.getElementById(inputId);
+    const errEl = document.getElementById(inputId + '-err');
+    input.classList.remove('invalid');
+    if (errEl) { errEl.textContent = ''; errEl.classList.remove('visible'); }
+  }
+
+  // ── Per-step validators ─────────────────────────────────────────────────────
+
+  const VALIDATORS = {
+    1: () => {
+      let ok = true;
+      const url = document.getElementById('uipath-url').value.trim();
+      const pat = document.getElementById('uipath-pat').value.trim();
+
+      if (!url.startsWith('https://') || !url.includes('uipath.com')) {
+        fieldErr('uipath-url', 'Must be a valid UiPath Cloud URL — e.g. https://cloud.uipath.com/yourorg');
+        ok = false;
+      }
+      if (!pat.startsWith('rt_') || pat.length < 10) {
+        fieldErr('uipath-pat', 'UiPath PAT must start with rt_ and be at least 10 characters');
+        ok = false;
+      }
+      return ok;
+    },
+
+    2: () => {
+      const key = document.getElementById('anthropic-key').value.trim();
+      if (!key.startsWith('sk-ant-') || key.length < 20) {
+        fieldErr('anthropic-key', 'Anthropic API key must start with sk-ant- (get one at console.anthropic.com)');
+        return false;
+      }
+      return true;
+    },
+
+    3: () => {
+      let ok = true;
+      const token = document.getElementById('github-token').value.trim();
+      const repo  = document.getElementById('github-repo').value.trim();
+
+      // Classic PAT: ghp_  |  Fine-grained: github_pat_
+      if (!token.startsWith('ghp_') && !token.startsWith('github_pat_') || token.length < 10) {
+        fieldErr('github-token', 'GitHub token must start with ghp_ (classic) or github_pat_ (fine-grained)');
+        ok = false;
+      }
+      // owner/repo — one slash, both sides non-empty, no spaces
+      if (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) {
+        fieldErr('github-repo', 'Repository must be in owner/repo format — e.g. yourname/your-flutter-app');
+        ok = false;
+      }
+      return ok;
+    },
+
+    4: () => {
+      let ok = true;
+      const jsonVal = document.getElementById('play-json').value.trim();
+      const pkg     = document.getElementById('package-name').value.trim();
+
+      if (!jsonVal) {
+        fieldErr('play-json', 'Paste your Google Cloud service account JSON here');
+        ok = false;
+      } else {
+        try {
+          const parsed = JSON.parse(jsonVal);
+          if (parsed.type !== 'service_account') {
+            fieldErr('play-json', 'JSON must have "type": "service_account"');
+            ok = false;
+          }
+        } catch {
+          fieldErr('play-json', 'Not valid JSON — paste the full file contents');
+          ok = false;
+        }
+      }
+
+      // Reverse domain: at least two dots, only alphanumeric + dots + underscores
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*){2,}$/.test(pkg)) {
+        fieldErr('package-name', 'Package name must be reverse domain notation — e.g. com.example.myapp');
+        ok = false;
+      }
+      return ok;
+    },
+
+    5: () => {
+      let ok = true;
+      const path   = document.getElementById('flutter-path').value.trim();
+      const branch = document.getElementById('default-branch').value.trim();
+      const avd    = document.getElementById('avd-name').value.trim();
+
+      // Absolute path: starts with / (macOS/Linux) or a drive letter (Windows)
+      if (!path.startsWith('/') && !/^[A-Za-z]:\\/.test(path)) {
+        fieldErr('flutter-path', 'Must be an absolute path — e.g. /Users/you/projects/myapp');
+        ok = false;
+      }
+      if (!branch || /\s/.test(branch)) {
+        fieldErr('default-branch', 'Branch name cannot be empty or contain spaces');
+        ok = false;
+      }
+      if (!avd || /\s/.test(avd)) {
+        fieldErr('avd-name', 'AVD name cannot be empty or contain spaces — run: emulator -list-avds');
+        ok = false;
+      }
+      return ok;
+    },
+  };
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+
+  function next(from) {
+    if (!VALIDATORS[from]()) return;   // block if validation fails
+    currentStep = from + 1;
+    showStep(currentStep);
+  }
+
+  function prev(from) {
+    currentStep = from - 1;
+    showStep(currentStep);
+  }
+
+  // ── Network calls ───────────────────────────────────────────────────────────
 
   async function post(url, body) {
     const res = await fetch(url, {
@@ -310,6 +457,7 @@
   }
 
   async function testUiPath() {
+    if (!VALIDATORS[1]()) return;
     const accountUrl = document.getElementById('uipath-url').value.trim();
     const pat = document.getElementById('uipath-pat').value.trim();
     const r = await post('/test-uipath', { accountUrl, pat });
@@ -317,12 +465,14 @@
   }
 
   async function testAnthropic() {
+    if (!VALIDATORS[2]()) return;
     const apiKey = document.getElementById('anthropic-key').value.trim();
     const r = await post('/test-anthropic', { apiKey });
     setStatus('anthropic-status', r.ok, r.ok ? 'API key is valid' : r.error || 'Invalid key');
   }
 
   async function testGitHub() {
+    if (!VALIDATORS[3]()) return;
     const token = document.getElementById('github-token').value.trim();
     const r = await post('/test-github', { token });
     setStatus('github-status', r.ok, r.ok ? `Authenticated as ${r.login}` : r.error);
@@ -335,12 +485,14 @@
   }
 
   async function verifyFlutter() {
+    if (!VALIDATORS[5]()) return;
     const projectPath = document.getElementById('flutter-path').value.trim();
     const r = await post('/verify-flutter', { projectPath });
     setStatus('flutter-status', r.ok, r.ok ? 'pubspec.yaml found ✓' : r.error);
   }
 
   async function saveConfig() {
+    if (!VALIDATORS[5]()) return;
     const config = {
       uipathAccountUrl: document.getElementById('uipath-url').value.trim(),
       uipathPat: document.getElementById('uipath-pat').value.trim(),

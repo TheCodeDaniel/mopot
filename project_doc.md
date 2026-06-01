@@ -5,7 +5,7 @@
 **Hackathon:** UiPath AgentHack 2026 (devpost.com)  
 **Track:** Track 3 — UiPath Test Cloud  
 **Deadline:** June 29, 2026  
-**Builder:** Daniel Ainoko / THECODEDANIEL LIMITED  
+**Builder:** Daniel Ainoko / thecodedaniel  
 
 ---
 
@@ -641,5 +641,5 @@ Rules:
 
 ---
 
-*Document version 1.0 — Daniel Ainoko / THECODEDANIEL LIMITED*  
+*Document version 1.0 — Daniel Ainoko / thecodedaniel*  
 *Built for UiPath AgentHack 2026 — Track 3: UiPath Test Cloud*
