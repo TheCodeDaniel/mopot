@@ -21,7 +21,10 @@
       "Bash(curl -s http://localhost:7499/health)",
       "Bash(kill %1)",
       "Bash(flutter test *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "WebFetch(domain:docs.uipath.com)",
+      "WebSearch",
+      "WebFetch(domain:forum.uipath.com)"
     ]
   }
 }

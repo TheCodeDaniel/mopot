@@ -19,19 +19,34 @@ export function createWizardServer() {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
   });
 
-  // Test UiPath connection
+  // Test UiPath connection.
+  // Per UiPath docs, PATs (rt_...) are used directly as Bearer tokens against
+  // org-scoped API endpoints — no token exchange needed.
+  // Ref: https://docs.uipath.com/automation-cloud/latest/api-guide/personal-access-tokens
   app.post('/test-uipath', async (req, res) => {
     const { accountUrl, pat } = req.body;
     try {
-      const url = accountUrl.replace(/\/$/, '') + '/identity_/connect/token';
-      await axios.post(url, new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: 'fc48a73a-3b19-4089-80b0-e48c55440d37',
-        refresh_token: pat,
-      }), { timeout: 8000 });
-      res.json({ ok: true });
+      // Extract org name from the account URL (last path segment)
+      const orgName = accountUrl.replace(/\/$/, '').split('/').pop();
+
+      const resp = await axios.get(
+        `https://cloud.uipath.com/${orgName}/identity_/connect/userinfo`,
+        {
+          headers: { Authorization: `Bearer ${pat}` },
+          timeout: 10000,
+        }
+      );
+
+      const name = resp.data.name || resp.data.email || 'authenticated';
+      res.json({ ok: true, name });
     } catch (err) {
-      res.json({ ok: false, error: err.message });
+      const status = err.response?.status;
+      const detail = err.response?.data?.error_description
+        || err.response?.data?.error
+        || err.message;
+      if (status === 401) return res.json({ ok: false, error: 'PAT rejected — check token scopes and expiry' });
+      if (status === 404) return res.json({ ok: false, error: 'Organisation not found — check your Account URL' });
+      res.json({ ok: false, error: detail });
     }
   });
 

@@ -150,6 +150,43 @@
 
     .nav { display: flex; gap: 8px; margin-top: 28px; }
     .nav-back { background: #2a2a3a; color: #aaa; }
+
+    details {
+      margin-top: 8px;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    summary {
+      font-size: 12px;
+      color: #7c6af7;
+      cursor: pointer;
+      padding: 7px 12px;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::before { content: '▸ '; }
+    details[open] summary::before { content: '▾ '; }
+    details[open] summary { border-bottom: 1px solid #2a2a3a; }
+    .guide {
+      padding: 12px 14px;
+      background: #12121a;
+      font-size: 12px;
+      color: #999;
+      line-height: 1.8;
+    }
+    .guide ol { padding-left: 16px; }
+    .guide li { margin-bottom: 4px; }
+    .guide a { color: #7c6af7; text-decoration: none; }
+    .guide a:hover { text-decoration: underline; }
+    .guide code {
+      background: #1e1e2e;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #c9b8ff;
+    }
   </style>
 </head>
 <body>
@@ -168,17 +205,43 @@
   <!-- Step 1: UiPath -->
   <div class="step active" id="step-1">
     <h2>Step 1 — UiPath Connection</h2>
-    <p class="desc">Connect to your UiPath Automation Cloud. A free Community Edition account works.</p>
+    <p class="desc">Connect to your UiPath Automation Cloud. A free Community Edition account works for the hackathon.</p>
     <div class="field">
       <label>Cloud Account URL</label>
       <input type="url" id="uipath-url" placeholder="https://cloud.uipath.com/yourorg" oninput="clearErr('uipath-url')" />
       <div class="field-error" id="uipath-url-err"></div>
+      <details>
+        <summary>How to find your Account URL</summary>
+        <div class="guide">
+          <ol>
+            <li>Go to <a href="https://cloud.uipath.com" target="_blank">cloud.uipath.com</a> and sign in</li>
+            <li>Your URL is the full address in the browser bar once you're inside your org — e.g. <code>https://cloud.uipath.com/mycompany</code></li>
+            <li>Copy everything up to and including the org slug (the last path segment)</li>
+          </ol>
+          Don't have an account? <a href="https://www.uipath.com/platform/community-edition" target="_blank">Sign up for free Community Edition →</a>
+        </div>
+      </details>
     </div>
     <div class="field">
       <label>Personal Access Token</label>
       <input type="password" id="uipath-pat" placeholder="rt_..." oninput="clearErr('uipath-pat')" />
       <div class="field-error" id="uipath-pat-err"></div>
-      <div class="hint">Generate at cloud.uipath.com → Profile → Access Tokens (scopes: OR.Execution, OR.Assets)</div>
+      <details>
+        <summary>How to generate a PAT</summary>
+        <div class="guide">
+          <ol>
+            <li>Go to <a href="https://cloud.uipath.com" target="_blank">cloud.uipath.com</a> and sign in</li>
+            <li>Click your <strong>profile icon</strong> (top-right) → <strong>My Profile</strong></li>
+            <li>Open the <strong>Access Tokens</strong> tab</li>
+            <li>Click <strong>Generate New Token</strong></li>
+            <li>Name: <code>mopot-cli</code> &nbsp;|&nbsp; Expiry: 1 year</li>
+            <li>Resource <strong>Orchestrator API Access</strong></li>
+            <li>Scopes: check <code>OR.Execution</code>, <code>OR.Assets</code>, <code>OR.Settings</code></li>
+            <li>Click <strong>Generate</strong> — copy the token immediately, it won't be shown again</li>
+          </ol>
+          Token starts with <code>rt_</code>
+        </div>
+      </details>
     </div>
     <button class="btn-test" onclick="testUiPath()">Test Connection</button>
     <div class="status" id="uipath-status"></div>
@@ -188,12 +251,27 @@
   <!-- Step 2: Anthropic -->
   <div class="step" id="step-2">
     <h2>Step 2 — Anthropic API Key</h2>
-    <p class="desc">Claude powers the testing, fixing, and asset generation steps.</p>
+    <p class="desc">Claude powers the testing, bug-fixing, and release asset generation steps.</p>
     <div class="field">
       <label>API Key</label>
       <input type="password" id="anthropic-key" placeholder="sk-ant-api03-..." oninput="clearErr('anthropic-key')" />
       <div class="field-error" id="anthropic-key-err"></div>
-      <div class="hint"><a href="https://console.anthropic.com" target="_blank">Get your key at console.anthropic.com</a></div>
+      <details>
+        <summary>How to get an Anthropic API key</summary>
+        <div class="guide">
+          <ol>
+            <li>Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></li>
+            <li>Sign in or create a free account</li>
+            <li>In the left sidebar, click <strong>API Keys</strong></li>
+            <li>Click <strong>Create Key</strong></li>
+            <li>Name it <code>mopot-pipeline</code></li>
+            <li>Copy the key immediately — it is only shown once</li>
+            <li>Make sure a <strong>payment method</strong> is added under Billing (pay-per-use)</li>
+          </ol>
+          Estimated cost per pipeline run: <strong>$0.10 – $0.40</strong> depending on codebase size.<br/>
+          Key starts with <code>sk-ant-</code>
+        </div>
+      </details>
     </div>
     <button class="btn-test" onclick="testAnthropic()">Test Key</button>
     <div class="status" id="anthropic-status"></div>
@@ -206,20 +284,40 @@
   <!-- Step 3: GitHub -->
   <div class="step" id="step-3">
     <h2>Step 3 — GitHub</h2>
-    <p class="desc">Mopot reads your repo, commits fixes, and opens Pull Requests on your behalf.</p>
+    <p class="desc">Mopot reads your repo, commits fixes on a branch, and opens Pull Requests on your behalf.</p>
     <div class="field">
       <label>Personal Access Token</label>
       <input type="password" id="github-token" placeholder="ghp_..." oninput="clearErr('github-token')" />
       <div class="field-error" id="github-token-err"></div>
-      <div class="hint">
-        <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank">Generate at github.com/settings/tokens</a>
-        — needs <code>repo</code> scope
-      </div>
+      <details>
+        <summary>How to generate a GitHub token</summary>
+        <div class="guide">
+          <ol>
+            <li>Go to <a href="https://github.com/settings/tokens/new?scopes=repo&description=mopot-pipeline" target="_blank">github.com/settings/tokens/new</a> (link pre-fills the settings)</li>
+            <li>Set <strong>Note</strong> to <code>mopot-pipeline</code></li>
+            <li>Set <strong>Expiration</strong> to 1 year</li>
+            <li>Under <strong>Select scopes</strong>, check <code>repo</code> (full repo access — required to open PRs)</li>
+            <li>Click <strong>Generate token</strong> at the bottom — copy it immediately</li>
+          </ol>
+          Token starts with <code>ghp_</code> (classic) or <code>github_pat_</code> (fine-grained)
+        </div>
+      </details>
     </div>
     <div class="field">
-      <label>Repository (owner/repo)</label>
-      <input type="text" id="github-repo" placeholder="yourname/your-flutter-app" oninput="clearErr('github-repo')" />
+      <label>GitHub Repository</label>
+      <input type="text" id="github-repo" placeholder="yourname/your-flutter-app" oninput="clearErr('github-repo'); autoFillRepo(this.value)" />
       <div class="field-error" id="github-repo-err"></div>
+      <details>
+        <summary>Where to find this</summary>
+        <div class="guide">
+          This is your Flutter app's GitHub repository — the one Mopot will watch for pushes, commit fixes to, and open Pull Requests on.<br/><br/>
+          <strong>How to find it:</strong><br/>
+          Open the repo on GitHub. The value is the two parts after <code>github.com/</code> in the URL:<br/><br/>
+          <code>github.com/<strong>thecodedaniel/my-flutter-app</strong></code><br/><br/>
+          → enter: <code>thecodedaniel/my-flutter-app</code><br/><br/>
+          <a href="https://github.com" target="_blank">Open GitHub to find your repo →</a>
+        </div>
+      </details>
     </div>
     <button class="btn-test" onclick="testGitHub()">Test Connection</button>
     <div class="status" id="github-status"></div>
@@ -232,20 +330,46 @@
   <!-- Step 4: Play Store -->
   <div class="step" id="step-4">
     <h2>Step 4 — Google Play Store</h2>
-    <p class="desc">Paste your Google Cloud service account JSON to enable Play Store deployment.</p>
+    <p class="desc">Mopot uses a service account to upload your APK and release notes to the Play Store.</p>
     <div class="field">
       <label>Service Account JSON</label>
       <textarea id="play-json" placeholder='{"type": "service_account", "project_id": "...", ...}' oninput="clearErr('play-json')"></textarea>
       <div class="field-error" id="play-json-err"></div>
-      <div class="hint">
-        Create in <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">Google Cloud Console</a>
-        → Service Accounts → Keys → JSON. Then grant Release Manager in Play Console → Setup → API access.
-      </div>
+      <details>
+        <summary>How to create a service account and get the JSON (6 steps)</summary>
+        <div class="guide">
+          <strong>Part A — Create the service account key</strong>
+          <ol>
+            <li>Go to <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank">Google Cloud Console → Service Accounts</a></li>
+            <li>Select or create a project, then click <strong>+ Create Service Account</strong></li>
+            <li>Name: <code>mopot-deployer</code> → click <strong>Create and Continue</strong> → skip role → click <strong>Done</strong></li>
+            <li>Click on the newly created account → open the <strong>Keys</strong> tab</li>
+            <li>Click <strong>Add Key → Create new key</strong> → select <strong>JSON</strong> → click <strong>Create</strong></li>
+            <li>A JSON file downloads automatically — paste its full contents into the field above</li>
+          </ol>
+          <strong>Part B — Grant Play Console access</strong>
+          <ol>
+            <li>Go to <a href="https://play.google.com/console/developers" target="_blank">play.google.com/console</a></li>
+            <li>Navigate to <strong>Setup → API access</strong></li>
+            <li>Click <strong>Link to a Google Cloud project</strong> → choose the same project</li>
+            <li>Under <strong>Service Accounts</strong>, find <code>mopot-deployer</code> → click <strong>Grant Access</strong></li>
+            <li>Set role to <strong>Release Manager</strong> → click <strong>Invite user</strong></li>
+          </ol>
+        </div>
+      </details>
     </div>
     <div class="field">
       <label>Play Store Package Name</label>
       <input type="text" id="package-name" placeholder="com.example.myapp" oninput="clearErr('package-name')" />
       <div class="field-error" id="package-name-err"></div>
+      <details>
+        <summary>Where to find your package name</summary>
+        <div class="guide">
+          Your package name is the <code>applicationId</code> in your Flutter app's <code>android/app/build.gradle</code>.<br/><br/>
+          It's also visible in the Play Console URL when you open your app:<br/>
+          <code>play.google.com/console/…/app/<strong>com.example.myapp</strong>/…</code>
+        </div>
+      </details>
     </div>
     <button class="btn-test" onclick="validatePlayJson()">Validate JSON</button>
     <div class="status" id="play-status"></div>
@@ -258,22 +382,41 @@
   <!-- Step 5: Project -->
   <div class="step" id="step-5">
     <h2>Step 5 — Flutter Project</h2>
-    <p class="desc">Tell Mopot where your Flutter app lives and which branch to watch.</p>
+    <p class="desc">Tell Mopot where your Flutter app lives and which Android emulator to use for testing.</p>
     <div class="field">
       <label>Flutter Project Path (absolute)</label>
       <input type="text" id="flutter-path" placeholder="/Users/you/projects/myapp" oninput="clearErr('flutter-path')" />
       <div class="field-error" id="flutter-path-err"></div>
+      <details>
+        <summary>How to find the project path</summary>
+        <div class="guide">
+          This is the folder that contains your <code>pubspec.yaml</code> file.<br/><br/>
+          <strong>macOS / Linux:</strong> open a terminal in your project folder and run <code>pwd</code><br/>
+          <strong>Windows:</strong> open File Explorer, navigate to the folder, click the address bar — the full path is shown<br/><br/>
+          Example: <code>/Users/daniel/StudioProjects/my_app</code>
+        </div>
+      </details>
     </div>
     <div class="field">
       <label>Default Branch</label>
       <input type="text" id="default-branch" value="main" oninput="clearErr('default-branch')" />
       <div class="field-error" id="default-branch-err"></div>
+      <div class="hint">The branch Mopot watches for pushes — usually <code>main</code> or <code>master</code></div>
     </div>
     <div class="field">
       <label>AVD Name (Android Virtual Device)</label>
       <input type="text" id="avd-name" placeholder="Pixel_9_Pro" value="Pixel_9_Pro" oninput="clearErr('avd-name')" />
       <div class="field-error" id="avd-name-err"></div>
-      <div class="hint">Run <code>emulator -list-avds</code> to see available AVDs</div>
+      <details>
+        <summary>How to find your AVD name</summary>
+        <div class="guide">
+          Run this command in a terminal to list your installed emulators:<br/>
+          <code>emulator -list-avds</code><br/><br/>
+          No emulators? Create one in <strong>Android Studio → Device Manager → + Create Device</strong>.<br/>
+          Recommended: <strong>Pixel 9 Pro</strong> with API 34 (Google APIs).<br/><br/>
+          The AVD name is exactly what's printed by <code>-list-avds</code> — spaces replaced with underscores, e.g. <code>Pixel_9_Pro</code>
+        </div>
+      </details>
     </div>
     <button class="btn-test" onclick="verifyFlutter()">Verify Flutter Project</button>
     <div class="status" id="flutter-status"></div>
@@ -461,7 +604,7 @@
     const accountUrl = document.getElementById('uipath-url').value.trim();
     const pat = document.getElementById('uipath-pat').value.trim();
     const r = await post('/test-uipath', { accountUrl, pat });
-    setStatus('uipath-status', r.ok, r.ok ? 'Connected to UiPath Cloud' : r.error);
+    setStatus('uipath-status', r.ok, r.ok ? `Connected — ${r.name}` : r.error);
   }
 
   async function testAnthropic() {
@@ -469,6 +612,16 @@
     const apiKey = document.getElementById('anthropic-key').value.trim();
     const r = await post('/test-anthropic', { apiKey });
     setStatus('anthropic-status', r.ok, r.ok ? 'API key is valid' : r.error || 'Invalid key');
+  }
+
+  // If the user pastes a full GitHub URL, strip it down to owner/repo automatically
+  function autoFillRepo(val) {
+    const match = val.match(/github\.com\/([^\/]+\/[^\/\s?#]+)/);
+    if (match) {
+      const input = document.getElementById('github-repo');
+      input.value = match[1].replace(/\.git$/, '');
+      clearErr('github-repo');
+    }
   }
 
   async function testGitHub() {
