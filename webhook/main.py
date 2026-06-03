@@ -32,6 +32,37 @@ _RUNS_DIR.mkdir(parents=True, exist_ok=True)
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _load_config() -> dict:
+    config_path = Path.home() / ".mopot" / "config.json"
+    try:
+        return json.loads(config_path.read_text()) if config_path.exists() else {}
+    except Exception:
+        return {}
+
+
+def _inject_config_env() -> None:
+    """Populate os.environ from ~/.mopot/config.json for any keys not already set.
+    This lets the server run without manually exporting env vars when a wizard
+    config file is present."""
+    config = _load_config()
+    mapping = {
+        "ANTHROPIC_API_KEY":     config.get("anthropicKey"),
+        "GITHUB_TOKEN":          config.get("githubToken"),
+        "GITHUB_REPO":           config.get("githubRepo"),
+        "GITHUB_DEFAULT_BRANCH": config.get("defaultBranch"),
+        "FLUTTER_PROJECT_PATH":  config.get("flutterProjectPath"),
+        "MOPOT_AVD":             config.get("avdName"),
+        "WEBHOOK_SECRET":        config.get("webhookSecret"),
+    }
+    for env_key, value in mapping.items():
+        if value and not os.environ.get(env_key):
+            os.environ[env_key] = value
+
+
+# Inject config values into the environment as soon as the module loads
+_inject_config_env()
+
+
 def _verify_github_signature(payload: bytes, sig_header: str) -> bool:
     secret = os.environ.get("WEBHOOK_SECRET", "")
     if not secret:
@@ -175,15 +206,15 @@ async def github_webhook(
 
     payload = json.loads(payload_bytes)
     run_id = str(uuid.uuid4())[:12]
+    config = _load_config()
 
-    project_path = os.environ.get("FLUTTER_PROJECT_PATH", ".")
     run_context: dict[str, Any] = {
         "run_id": run_id,
         "repo": payload.get("repository", {}).get("full_name", ""),
         "branch": payload.get("ref", "").replace("refs/heads/", ""),
         "commit_sha": payload.get("after", ""),
-        "project_path": project_path,
-        "avd_name": os.environ.get("MOPOT_AVD", "Pixel_9_Pro"),
+        "project_path": os.environ.get("FLUTTER_PROJECT_PATH") or config.get("flutterProjectPath", "."),
+        "avd_name": os.environ.get("MOPOT_AVD") or config.get("avdName", "Pixel_9_Pro"),
     }
 
     _init_run(run_id, run_context)
@@ -196,14 +227,15 @@ async def github_webhook(
 async def manual_trigger(request: Request, background_tasks: BackgroundTasks) -> JSONResponse:
     body = await request.json() if request.headers.get("content-type") == "application/json" else {}
     run_id = str(uuid.uuid4())[:12]
+    config = _load_config()
 
     run_context: dict[str, Any] = {
         "run_id": run_id,
-        "repo": os.environ.get("GITHUB_REPO", body.get("repo", "")),
-        "branch": body.get("branch", os.environ.get("GITHUB_DEFAULT_BRANCH", "main")),
-        "commit_sha": body.get("commit_sha", "manual"),
-        "project_path": body.get("project_path", os.environ.get("FLUTTER_PROJECT_PATH", ".")),
-        "avd_name": os.environ.get("MOPOT_AVD", "Pixel_9_Pro"),
+        "repo":         body.get("repo")         or os.environ.get("GITHUB_REPO")             or config.get("githubRepo", ""),
+        "branch":       body.get("branch")        or os.environ.get("GITHUB_DEFAULT_BRANCH")   or config.get("defaultBranch", "main"),
+        "commit_sha":   body.get("commit_sha", "manual"),
+        "project_path": body.get("project_path") or os.environ.get("FLUTTER_PROJECT_PATH")    or config.get("flutterProjectPath", "."),
+        "avd_name":                                   os.environ.get("MOPOT_AVD")              or config.get("avdName", "Pixel_9_Pro"),
     }
 
     _init_run(run_id, run_context)
