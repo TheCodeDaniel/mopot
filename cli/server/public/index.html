@@ -7,34 +7,152 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Theme variables — dark by default ─────────────────────────────────── */
+    :root {
+      --bg:               #0f0f13;
+      --text:             #e8e8f0;
+      --card-bg:          #1a1a24;
+      --card-border:      #2a2a3a;
+      --input-bg:         #12121a;
+      --input-border:     #2a2a3a;
+      --pip-inactive:     #2a2a3a;
+      --label:            #aaa;
+      --muted:            #888;
+      --hint:             #555;
+      --btn-sec-bg:       #2a2a3a;
+      --btn-sec-color:    #aaa;
+      --btn-test-bg:      #2a2a3a;
+      --status-ok-bg:     #12301a;
+      --status-ok-color:  #4caf72;
+      --status-err-bg:    #2a1010;
+      --status-err-color: #e05555;
+      --guide-bg:         #12121a;
+      --guide-code-bg:    #1e1e2e;
+      --guide-code-color: #c9b8ff;
+    }
+
+    /* Auto-detect light mode (only when no manual override is set) */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme]) {
+        --bg:               #f4f4f8;
+        --text:             #1c1c2e;
+        --card-bg:          #ffffff;
+        --card-border:      #d8d8e8;
+        --input-bg:         #f8f8fd;
+        --input-border:     #c8c8dc;
+        --pip-inactive:     #d0d0e4;
+        --label:            #4a4a5e;
+        --muted:            #6a6a7e;
+        --hint:             #8a8a9e;
+        --btn-sec-bg:       #eaeaf4;
+        --btn-sec-color:    #4a4a5e;
+        --btn-test-bg:      #eaeaf4;
+        --status-ok-bg:     #e8f5ee;
+        --status-ok-color:  #1e7a3e;
+        --status-err-bg:    #fceaea;
+        --status-err-color: #b83030;
+        --guide-bg:         #f0f0fb;
+        --guide-code-bg:    #e4e4f4;
+        --guide-code-color: #5048cc;
+      }
+    }
+
+    /* Manual dark override */
+    :root[data-theme="dark"] {
+      --bg:               #0f0f13;
+      --text:             #e8e8f0;
+      --card-bg:          #1a1a24;
+      --card-border:      #2a2a3a;
+      --input-bg:         #12121a;
+      --input-border:     #2a2a3a;
+      --pip-inactive:     #2a2a3a;
+      --label:            #aaa;
+      --muted:            #888;
+      --hint:             #555;
+      --btn-sec-bg:       #2a2a3a;
+      --btn-sec-color:    #aaa;
+      --btn-test-bg:      #2a2a3a;
+      --status-ok-bg:     #12301a;
+      --status-ok-color:  #4caf72;
+      --status-err-bg:    #2a1010;
+      --status-err-color: #e05555;
+      --guide-bg:         #12121a;
+      --guide-code-bg:    #1e1e2e;
+      --guide-code-color: #c9b8ff;
+    }
+
+    /* Manual light override */
+    :root[data-theme="light"] {
+      --bg:               #f4f4f8;
+      --text:             #1c1c2e;
+      --card-bg:          #ffffff;
+      --card-border:      #d8d8e8;
+      --input-bg:         #f8f8fd;
+      --input-border:     #c8c8dc;
+      --pip-inactive:     #d0d0e4;
+      --label:            #4a4a5e;
+      --muted:            #6a6a7e;
+      --hint:             #8a8a9e;
+      --btn-sec-bg:       #eaeaf4;
+      --btn-sec-color:    #4a4a5e;
+      --btn-test-bg:      #eaeaf4;
+      --status-ok-bg:     #e8f5ee;
+      --status-ok-color:  #1e7a3e;
+      --status-err-bg:    #fceaea;
+      --status-err-color: #b83030;
+      --guide-bg:         #f0f0fb;
+      --guide-code-bg:    #e4e4f4;
+      --guide-code-color: #5048cc;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f13;
-      color: #e8e8f0;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
+      transition: background 0.2s, color 0.2s;
     }
 
     .card {
-      background: #1a1a24;
-      border: 1px solid #2a2a3a;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 16px;
       width: 100%;
       max-width: 560px;
       padding: 40px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
     }
 
     .logo {
       font-size: 22px;
       font-weight: 700;
       color: #7c6af7;
-      margin-bottom: 4px;
     }
 
-    .tagline { font-size: 13px; color: #888; margin-bottom: 32px; }
+    .theme-toggle {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: var(--btn-sec-bg);
+      color: var(--muted);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .theme-toggle:hover { opacity: 0.8; }
+
+    .tagline { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
 
     .progress {
       display: flex;
@@ -46,7 +164,7 @@
       height: 4px;
       flex: 1;
       border-radius: 2px;
-      background: #2a2a3a;
+      background: var(--pip-inactive);
       transition: background 0.3s;
     }
     .pip.done { background: #7c6af7; }
@@ -56,20 +174,20 @@
     .step.active { display: block; }
 
     h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    p.desc { font-size: 13px; color: #888; margin-bottom: 24px; line-height: 1.5; }
+    p.desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
 
-    label { display: block; font-size: 13px; color: #aaa; margin-bottom: 6px; }
+    label { display: block; font-size: 13px; color: var(--label); margin-bottom: 6px; }
 
     input[type="text"], input[type="password"], input[type="url"] {
       width: 100%;
-      background: #12121a;
-      border: 1px solid #2a2a3a;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      color: #e8e8f0;
+      color: var(--text);
       font-size: 14px;
       padding: 10px 14px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
     }
     input:focus { border-color: #7c6af7; }
     input.invalid { border-color: #e05555 !important; }
@@ -83,7 +201,7 @@
       display: none;
     }
     .field-error.visible { display: block; }
-    .hint { font-size: 12px; color: #555; margin-top: 4px; }
+    .hint { font-size: 12px; color: var(--hint); margin-top: 4px; }
     .hint a { color: #7c6af7; text-decoration: none; }
 
     .row { display: flex; gap: 8px; margin-top: 8px; }
@@ -101,11 +219,11 @@
 
     .btn-primary { background: #7c6af7; color: #fff; flex: 1; }
     .btn-secondary {
-      background: #2a2a3a;
-      color: #aaa;
+      background: var(--btn-sec-bg);
+      color: var(--btn-sec-color);
       padding: 10px 14px;
     }
-    .btn-test { background: #2a2a3a; color: #7c6af7; font-size: 13px; }
+    .btn-test { background: var(--btn-test-bg); color: #7c6af7; font-size: 13px; }
 
     .status {
       font-size: 13px;
@@ -114,31 +232,32 @@
       margin-top: 8px;
       display: none;
     }
-    .status.ok { display: block; background: #12301a; color: #4caf72; }
-    .status.err { display: block; background: #2a1010; color: #e05555; }
+    .status.ok { display: block; background: var(--status-ok-bg); color: var(--status-ok-color); }
+    .status.err { display: block; background: var(--status-err-bg); color: var(--status-err-color); }
 
     textarea {
       width: 100%;
-      background: #12121a;
-      border: 1px solid #2a2a3a;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      color: #e8e8f0;
+      color: var(--text);
       font-size: 12px;
       font-family: monospace;
       padding: 10px 14px;
       height: 90px;
       resize: vertical;
       outline: none;
+      transition: border-color 0.2s, background 0.2s;
     }
     textarea:focus { border-color: #7c6af7; }
 
     .done-screen { text-align: center; padding: 16px 0; }
     .done-screen .icon { font-size: 48px; margin-bottom: 16px; }
     .done-screen h2 { font-size: 22px; margin-bottom: 8px; }
-    .done-screen p { color: #888; font-size: 14px; line-height: 1.6; }
+    .done-screen p { color: var(--muted); font-size: 14px; line-height: 1.6; }
     .code-block {
-      background: #12121a;
-      border: 1px solid #2a2a3a;
+      background: var(--guide-bg);
+      border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 12px 14px;
       font-family: monospace;
@@ -149,11 +268,11 @@
     }
 
     .nav { display: flex; gap: 8px; margin-top: 28px; }
-    .nav-back { background: #2a2a3a; color: #aaa; }
+    .nav-back { background: var(--btn-sec-bg); color: var(--btn-sec-color); }
 
     details {
       margin-top: 8px;
-      border: 1px solid #2a2a3a;
+      border: 1px solid var(--card-border);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -166,14 +285,14 @@
       user-select: none;
     }
     summary::-webkit-details-marker { display: none; }
-    summary::before { content: '▸ '; }
-    details[open] summary::before { content: '▾ '; }
-    details[open] summary { border-bottom: 1px solid #2a2a3a; }
+    summary::before { content: '\25B8  '; }
+    details[open] summary::before { content: '\25BE  '; }
+    details[open] summary { border-bottom: 1px solid var(--card-border); }
     .guide {
       padding: 12px 14px;
-      background: #12121a;
+      background: var(--guide-bg);
       font-size: 12px;
-      color: #999;
+      color: var(--muted);
       line-height: 1.8;
     }
     .guide ol { padding-left: 16px; }
@@ -181,17 +300,20 @@
     .guide a { color: #7c6af7; text-decoration: none; }
     .guide a:hover { text-decoration: underline; }
     .guide code {
-      background: #1e1e2e;
+      background: var(--guide-code-bg);
       padding: 1px 5px;
       border-radius: 4px;
       font-size: 11px;
-      color: #c9b8ff;
+      color: var(--guide-code-color);
     }
   </style>
 </head>
 <body>
 <div class="card">
-  <div class="logo">mopot</div>
+  <div class="logo-row">
+    <div class="logo">mopot</div>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">&#9788; Light</button>
+  </div>
   <div class="tagline">Setup Wizard — 5 steps to autonomous deploys</div>
 
   <div class="progress">
@@ -435,7 +557,7 @@
       <div class="code-block">mopot status</div>
       <p>To trigger manually:</p>
       <div class="code-block">mopot run</div>
-      <p style="margin-top:16px; font-size:13px; color:#555;">This window can be closed.</p>
+      <p style="margin-top:16px; font-size:13px; color:var(--hint);">This window can be closed.</p>
     </div>
   </div>
 </div>
@@ -443,6 +565,55 @@
 <script>
   let currentStep = 1;
   const TOTAL = 5;
+
+  // ── Theme ────────────────────────────────────────────────────────────────────
+
+  const STEP_FIELDS = {
+    1: ['uipath-url', 'uipath-pat'],
+    2: ['anthropic-key'],
+    3: ['github-token', 'github-repo'],
+    4: ['play-json', 'package-name'],
+    5: ['flutter-path', 'default-branch', 'avd-name'],
+  };
+
+  function resolveCurrentTheme() {
+    const saved = localStorage.getItem('mopot-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('theme-toggle');
+    btn.innerHTML = theme === 'dark' ? '&#9788; Light' : '&#9790; Dark';
+  }
+
+  function toggleTheme() {
+    const current = resolveCurrentTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('mopot-theme', next);
+    applyTheme(next);
+  }
+
+  // ── localStorage persistence ─────────────────────────────────────────────────
+
+  function saveStepData(step) {
+    const fields = STEP_FIELDS[step] || [];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) localStorage.setItem('mopot-field-' + id, el.value);
+    });
+  }
+
+  function loadAllData() {
+    Object.values(STEP_FIELDS).flat().forEach(id => {
+      const saved = localStorage.getItem('mopot-field-' + id);
+      if (saved !== null) {
+        const el = document.getElementById(id);
+        if (el) el.value = saved;
+      }
+    });
+  }
 
   // ── UI helpers ──────────────────────────────────────────────────────────────
 
@@ -461,7 +632,6 @@
     el.textContent = ok ? '✅ ' + msg : '❌ ' + msg;
   }
 
-  // Show a field-level error and mark the input red
   function fieldErr(inputId, msg) {
     const input = document.getElementById(inputId);
     const errEl = document.getElementById(inputId + '-err');
@@ -469,7 +639,6 @@
     if (errEl) { errEl.textContent = msg; errEl.classList.add('visible'); }
   }
 
-  // Clear a field error (called on every keystroke via oninput)
   function clearErr(inputId) {
     const input = document.getElementById(inputId);
     const errEl = document.getElementById(inputId + '-err');
@@ -510,12 +679,10 @@
       const token = document.getElementById('github-token').value.trim();
       const repo  = document.getElementById('github-repo').value.trim();
 
-      // Classic PAT: ghp_  |  Fine-grained: github_pat_
       if (!token.startsWith('ghp_') && !token.startsWith('github_pat_') || token.length < 10) {
         fieldErr('github-token', 'GitHub token must start with ghp_ (classic) or github_pat_ (fine-grained)');
         ok = false;
       }
-      // owner/repo — one slash, both sides non-empty, no spaces
       if (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) {
         fieldErr('github-repo', 'Repository must be in owner/repo format — e.g. yourname/your-flutter-app');
         ok = false;
@@ -544,7 +711,6 @@
         }
       }
 
-      // Reverse domain: at least two dots, only alphanumeric + dots + underscores
       if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*){2,}$/.test(pkg)) {
         fieldErr('package-name', 'Package name must be reverse domain notation — e.g. com.example.myapp');
         ok = false;
@@ -558,7 +724,6 @@
       const branch = document.getElementById('default-branch').value.trim();
       const avd    = document.getElementById('avd-name').value.trim();
 
-      // Absolute path: starts with / (macOS/Linux) or a drive letter (Windows)
       if (!path.startsWith('/') && !/^[A-Za-z]:\\/.test(path)) {
         fieldErr('flutter-path', 'Must be an absolute path — e.g. /Users/you/projects/myapp');
         ok = false;
@@ -578,7 +743,8 @@
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   function next(from) {
-    if (!VALIDATORS[from]()) return;   // block if validation fails
+    if (!VALIDATORS[from]()) return;
+    saveStepData(from);
     currentStep = from + 1;
     showStep(currentStep);
   }
@@ -614,7 +780,6 @@
     setStatus('anthropic-status', r.ok, r.ok ? 'API key is valid' : r.error || 'Invalid key');
   }
 
-  // If the user pastes a full GitHub URL, strip it down to owner/repo automatically
   function autoFillRepo(val) {
     const match = val.match(/github\.com\/([^\/]+\/[^\/\s?#]+)/);
     if (match) {
@@ -646,21 +811,27 @@
 
   async function saveConfig() {
     if (!VALIDATORS[5]()) return;
+    saveStepData(5);
     const config = {
-      uipathAccountUrl: document.getElementById('uipath-url').value.trim(),
-      uipathPat: document.getElementById('uipath-pat').value.trim(),
-      anthropicKey: document.getElementById('anthropic-key').value.trim(),
-      githubToken: document.getElementById('github-token').value.trim(),
-      githubRepo: document.getElementById('github-repo').value.trim(),
-      playStoreJson: document.getElementById('play-json').value.trim(),
-      playStorePackageName: document.getElementById('package-name').value.trim(),
-      flutterProjectPath: document.getElementById('flutter-path').value.trim(),
-      defaultBranch: document.getElementById('default-branch').value.trim(),
-      avdName: document.getElementById('avd-name').value.trim(),
+      uipathAccountUrl:    document.getElementById('uipath-url').value.trim(),
+      uipathPat:           document.getElementById('uipath-pat').value.trim(),
+      anthropicKey:        document.getElementById('anthropic-key').value.trim(),
+      githubToken:         document.getElementById('github-token').value.trim(),
+      githubRepo:          document.getElementById('github-repo').value.trim(),
+      playStoreJson:       document.getElementById('play-json').value.trim(),
+      playStorePackageName:document.getElementById('package-name').value.trim(),
+      flutterProjectPath:  document.getElementById('flutter-path').value.trim(),
+      defaultBranch:       document.getElementById('default-branch').value.trim(),
+      avdName:             document.getElementById('avd-name').value.trim(),
     };
     await post('/save-config', config);
     showStep('done');
   }
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+
+  applyTheme(resolveCurrentTheme());
+  loadAllData();
 </script>
 </body>
 </html>
