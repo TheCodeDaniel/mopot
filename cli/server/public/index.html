@@ -442,6 +442,10 @@
 
       <!-- Text input (shown when no emulators found, or user picks "type manually") -->
       <input type="text" id="avd-name" placeholder="Pixel_9_Pro" oninput="clearErr('avd-name')" />
+      <div id="avd-back-wrap" style="display:none; margin-top:6px">
+        <a href="#" onclick="restoreAvdSelect(); return false;"
+           style="font-size:12px; color:#7c6af7; text-decoration:none;">&#8592; pick from detected emulators</a>
+      </div>
 
       <div class="field-error" id="avd-name-err"></div>
       <details>
@@ -632,16 +636,34 @@
   function syncAvd(val) {
     const textInput = document.getElementById('avd-name');
     const wrap = document.getElementById('avd-select-wrap');
+    const backWrap = document.getElementById('avd-back-wrap');
     if (val === '__manual__') {
-      // Show text input, hide select
       wrap.style.display = 'none';
       textInput.style.display = '';
+      backWrap.style.display = 'block';
       textInput.value = '';
       textInput.focus();
     } else {
       textInput.value = val;
       clearErr('avd-name');
     }
+  }
+
+  function restoreAvdSelect() {
+    const textInput = document.getElementById('avd-name');
+    const wrap = document.getElementById('avd-select-wrap');
+    const backWrap = document.getElementById('avd-back-wrap');
+    const select = document.getElementById('avd-select');
+    // Reset to first real AVD option
+    const firstAvd = Array.from(select.options).find(o => o.value !== '__manual__');
+    if (firstAvd) {
+      select.value = firstAvd.value;
+      textInput.value = firstAvd.value;
+    }
+    wrap.style.display = 'block';
+    textInput.style.display = 'none';
+    backWrap.style.display = 'none';
+    clearErr('avd-name');
   }
 
   // ── Per-step validators ─────────────────────────────────────────────────────
