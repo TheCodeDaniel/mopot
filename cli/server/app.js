@@ -32,22 +32,24 @@ export function createWizardServer() {
   });
 
   // ── UiPath connection ──────────────────────────────────────────────────────
-  // PATs (rt_...) are used directly as Bearer tokens against org-scoped endpoints.
-  // Ref: https://docs.uipath.com/automation-cloud/latest/api-guide/personal-access-tokens
+  // PATs (rt_...) are Bearer tokens for Orchestrator API endpoints.
+  // We use GetCurrentUser() which requires OR.* scopes — exactly what the wizard asks the user to grant.
+  // The OIDC userinfo endpoint is intentionally avoided: it requires the `openid` scope which PATs don't carry.
   app.post('/test-uipath', async (req, res) => {
     const { accountUrl, pat } = req.body;
     try {
       const orgName = accountUrl.replace(/\/$/, '').split('/').pop();
       const resp = await axios.get(
-        `https://cloud.uipath.com/${orgName}/identity_/connect/userinfo`,
+        `https://cloud.uipath.com/${orgName}/orchestrator_/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser()`,
         { headers: { Authorization: `Bearer ${pat}` }, timeout: 10000 }
       );
-      const name = resp.data.name || resp.data.email || 'authenticated';
+      const name = resp.data.FullName || resp.data.UserName || resp.data.EmailAddress || 'authenticated';
       res.json({ ok: true, name });
     } catch (err) {
       const status = err.response?.status;
-      const detail = err.response?.data?.error_description || err.response?.data?.error || err.message;
-      if (status === 401) return res.json({ ok: false, error: 'PAT rejected — check token scopes and expiry' });
+      const detail = err.response?.data?.message || err.response?.data?.error_description || err.response?.data?.error || err.message;
+      if (status === 401) return res.json({ ok: false, error: 'PAT rejected — check the token has not expired' });
+      if (status === 403) return res.json({ ok: false, error: 'Access denied — regenerate your PAT and ensure it has OR.Execution, OR.Assets and OR.Settings scopes' });
       if (status === 404) return res.json({ ok: false, error: 'Organisation not found — check your Account URL' });
       res.json({ ok: false, error: detail });
     }
