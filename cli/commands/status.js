@@ -36,12 +36,6 @@ async function checkAnthropic(apiKey) {
   return { ok: true, detail: 'key present (not verified)' };
 }
 
-async function checkPlayStore(jsonPath) {
-  if (!jsonPath) return { ok: false, detail: 'not configured' };
-  const exists = await fs.pathExists(jsonPath);
-  return { ok: exists, detail: exists ? 'service account JSON found' : 'file not found' };
-}
-
 function fmt(label, { ok, detail }) {
   const icon = ok ? chalk.green('✅') : chalk.red('❌');
   const text = ok ? chalk.white(label) : chalk.gray(label);
@@ -60,14 +54,13 @@ const statusCommand = new Command('status')
       // config may not exist yet
     }
 
-    const [server, github, anthropic, playStore] = await Promise.allSettled([
+    const [server, github, anthropic] = await Promise.allSettled([
       checkServer(),
       checkGitHub(config.githubToken),
       checkAnthropic(config.anthropicKey),
-      checkPlayStore(config.playStoreJsonPath),
     ]);
 
-    const results = [server, github, anthropic, playStore].map(r =>
+    const results = [server, github, anthropic].map(r =>
       r.status === 'fulfilled' ? r.value : { ok: false, detail: r.reason?.message || 'error' }
     );
 
@@ -76,7 +69,6 @@ const statusCommand = new Command('status')
     console.log(fmt('Pipeline Server', results[0]));
     console.log(fmt('GitHub', results[1]));
     console.log(fmt('Anthropic', results[2]));
-    console.log(fmt('Play Store', results[3]));
     console.log();
 
     const allOk = results.every(r => r.ok);

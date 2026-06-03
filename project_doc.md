@@ -1,5 +1,5 @@
 # MOPOT — Project Documentation
-### Autonomous Mobile Release Pipeline powered by Claude Code + UiPath
+### Autonomous Mobile Test + Fix Pipeline powered by Claude + UiPath
 
 **Version:** 1.0  
 **Hackathon:** UiPath AgentHack 2026 (devpost.com)  
@@ -11,9 +11,9 @@
 
 ## 1. What Is Mopot?
 
-Mopot is an autonomous mobile release pipeline agent. A developer pushes code to GitHub and Mopot handles everything else — it tests the Flutter/Android app using Claude Code, finds bugs, opens a PR with fixes, and deploys to the Google Play Store. Humans stay in control through two approval gates powered by UiPath Action Center.
+Mopot is an autonomous mobile test + fix pipeline agent. A developer pushes code to GitHub and Mopot handles the hard parts — it builds the Flutter/Android app, navigates it with Claude AI vision to find bugs, writes code fixes, and opens a Pull Request. Humans stay in control through two approval gates powered by UiPath Action Center.
 
-**Tagline:** *Push code. Mopot ships it.*
+**Tagline:** *Push code. Mopot finds the bugs and opens the PR.*
 
 ---
 
@@ -23,12 +23,10 @@ Mobile developers waste hours every release on tasks that require no creative th
 
 - Manually running test suites and reading crash logs
 - Hunting down bugs introduced in the latest commit
-- Writing release notes from memory
-- Exporting screenshots in 6 device sizes
-- Filling in Play Store metadata
-- Waiting on Play Console submission status
+- Verifying that the app actually works on a device after building
+- Writing fix branches, committing, and opening PRs for known bugs
 
-No existing tool automates this end to end. CI/CD tools like Codemagic and Bitrise build and upload the binary — but everything surrounding the store submission is still manual. Mopot closes that gap entirely.
+No existing tool automates this end to end. CI/CD tools like Codemagic and Bitrise build and upload the binary — but the test-and-fix loop between the build and a mergeable PR is still manual. Mopot closes that gap.
 
 ---
 
@@ -43,7 +41,7 @@ The Track 3 description explicitly states the goal is to build agents that:
 
 Mopot does all three. The testing + fix loop is the core innovation. BPMN process orchestration exists inside the solution and satisfies the UiPath Platform Usage criterion without repositioning the product.
 
-**Bonus points:** Claude Code is the primary coding agent throughout. This earns additional points under the Platform Usage judging criterion per the hackathon rules.
+**Bonus points:** Claude is the primary coding agent throughout. This earns additional points under the Platform Usage judging criterion per the hackathon rules.
 
 ---
 
@@ -66,9 +64,9 @@ Python agent runs:
   → flutter build apk --debug
         │
         ▼
-STEP 3 — Agentic Testing Phase (Claude Code)
+STEP 3 — Agentic Testing Phase (Claude)
 Android emulator spins up via ADB
-Claude Code agent:
+Claude agent:
   → reads Flutter codebase for context
   → navigates the running app screen by screen
   → takes screenshots of every state
@@ -88,8 +86,8 @@ UiPath Action Center presents bug report to developer
   → "Approve auto-fix attempt?" YES / NO
         │ (YES)
         ▼
-STEP 5 — Fix Phase (Claude Code)
-Claude Code agent:
+STEP 5 — Fix Phase (Claude)
+Claude agent:
   → reads every reported bug
   → writes code fixes
   → commits to branch: mopot/fix-{run-id}
@@ -105,30 +103,12 @@ If tests fail → loop back to Claude for another fix attempt (max 2 retries)
         ▼
 STEP 7 — ── HUMAN GATE 2 ──
 UiPath Action Center presents results to developer
-  → "All tests passing. Approve deployment?" YES / NO
+  → "Fix PR is ready for review. All tests passing. Merge the PR?"
   → Shows diff summary of what was fixed
-        │ (YES)
+  → Shows PR link
+        │ (YES — developer merges manually)
         ▼
-STEP 8 — Asset Generation Phase (Claude Code)
-Claude Code agent generates:
-  → Release notes (from git diff + commit messages)
-  → Play Store short description
-  → Play Store full description
-  → Screenshots framed for all required device sizes
-        │
-        ▼
-STEP 9 — Deployment Phase
-Python deployer agent:
-  → Uploads APK to Play Store via Google Play Developer API
-  → Uploads screenshots
-  → Submits release notes and metadata
-  → Sets rollout to internal testing track
-        │
-        ▼
-STEP 10 — Monitoring Phase
-Maestro monitors Play Console submission status
-  → Rejection → Maestro routes back to Claude with rejection reason
-  → Approved → Pipeline complete
+COMPLETE
 Developer notified via Action Center + Email
 ```
 
@@ -142,8 +122,7 @@ Developer notified via Action Center + Email
 │                                                      │
 │  ┌─────────────────────────────────────────────┐    │
 │  │         Maestro BPMN Process                │    │
-│  │  Trigger→Build→Test→Gate1→Fix→Retest→       │    │
-│  │  Gate2→Assets→Deploy→Monitor                │    │
+│  │  Trigger→Build→Test→Gate1→Fix→Retest→Gate2  │    │
 │  └─────────────────────────────────────────────┘    │
 │                                                      │
 │  ┌──────────────────┐  ┌────────────────────────┐   │
@@ -154,7 +133,7 @@ Developer notified via Action Center + Email
 │  ┌──────────────────────────────────────────────┐   │
 │  │       Orchestrator Credential Store          │   │
 │  │  ANTHROPIC_API_KEY | GITHUB_TOKEN |          │   │
-│  │  PLAY_STORE_JSON   | UIPATH_PAT   |          │   │
+│  │  UIPATH_PAT        | WEBHOOK_SECRET          │   │
 │  └──────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────┘
                        │
@@ -165,10 +144,8 @@ Developer notified via Action Center + Email
 │                                                      │
 │  ┌─────────────────────────────────────────────┐    │
 │  │         Python Agents                        │    │
-│  │  tester_agent.py   (Claude Code)            │    │
-│  │  fixer_agent.py    (Claude Code)            │    │
-│  │  deployer_agent.py (Play Store API)         │    │
-│  │  asset_agent.py    (screenshots + notes)    │    │
+│  │  tester_agent.py   (Claude vision loop)     │    │
+│  │  fixer_agent.py    (Claude code fixes + PR) │    │
 │  └─────────────────────────────────────────────┘    │
 │                                                      │
 │  ┌─────────────────────────────────────────────┐    │
@@ -194,11 +171,10 @@ Developer notified via Action Center + Email
 | Testing | UiPath Test Cloud | Formal test execution + results |
 | Human Gates | UiPath Action Center | Approval UI + email notifications |
 | Secrets | UiPath Orchestrator | Encrypted credential store |
-| AI Brain | Claude Code (Anthropic API) | Testing, fixing, asset generation |
+| AI Brain | Claude (Anthropic API) | Testing and bug-fixing |
 | Mobile Control | ADB + Android Emulator | App navigation + screenshot capture |
 | Build | Flutter CLI | APK compilation + test execution |
 | Version Control | GitHub API + Webhooks | Trigger pipeline + commit fixes as PR |
-| Deployment | Google Play Developer API | Submit APK + metadata to Play Store |
 | Language (agents) | Python 3.11+ | All agent logic |
 | Containerization | Docker | Packages agent environment for UiPath Robot |
 
@@ -223,10 +199,8 @@ mopot/
 │           └── index.html        # Setup wizard UI
 │
 ├── agents/                       # Python agents (run via UiPath Robot)
-│   ├── tester_agent.py           # Claude Code — navigate + find bugs
-│   ├── fixer_agent.py            # Claude Code — write fixes + open PR
-│   ├── asset_agent.py            # Claude Code — release notes + screenshots
-│   └── deployer_agent.py         # Play Store API submission
+│   ├── tester_agent.py           # Claude — navigate app + find bugs
+│   └── fixer_agent.py            # Claude — write fixes + open PR
 │
 ├── platforms/                    # Platform adapter layer
 │   ├── base_adapter.py           # Abstract interface (DO NOT MODIFY)
@@ -256,7 +230,7 @@ mopot/
 
 ## 8. Platform Adapter Interface
 
-This is the core design decision that makes Mopot extensible. Every platform must implement this interface. UiPath and Claude Code never interact with platform specifics directly — they talk to the adapter.
+This is the core design decision that makes Mopot extensible. Every platform must implement this interface. UiPath and Claude never interact with platform specifics directly — they talk to the adapter.
 
 ```python
 # platforms/base_adapter.py
@@ -290,13 +264,6 @@ class CrashLog:
     error_type: str
     stack_trace: str
     screen: Optional[str] = None
-
-@dataclass
-class DeployResult:
-    success: bool
-    track: str
-    version_code: int
-    error: Optional[str] = None
 
 class MobilePlatformAdapter(ABC):
 
@@ -333,11 +300,6 @@ class MobilePlatformAdapter(ABC):
     @abstractmethod
     def run_tests(self, project_path: str) -> dict:
         """Execute test suite and return results"""
-        pass
-
-    @abstractmethod
-    def deploy(self, artifact_path: str, store_config: dict) -> DeployResult:
-        """Submit build to app store"""
         pass
 
     @abstractmethod
@@ -382,7 +344,7 @@ When the user runs `mopot init`, the CLI:
 1. Finds a free port (default 3420, scans up if taken)
 2. Spins up a temporary Express server
 3. Opens `http://localhost:{port}` in the default browser
-4. Displays a 5-step configuration wizard
+4. Displays a 4-step configuration wizard
 
 **Step 1 — UiPath Connection**
 - UiPath Cloud Account URL (e.g. `https://cloud.uipath.com/yourorg`)
@@ -391,28 +353,22 @@ When the user runs `mopot init`, the CLI:
 
 **Step 2 — Anthropic API Key**
 - API Key field (masked input)
-- ✅ "Test Connection" — makes a lightweight API call to verify
+- ✅ "Test Key" — makes a lightweight API call to verify
 - Link: *"Get your key at console.anthropic.com"*
 
 **Step 3 — GitHub**
 - GitHub Personal Access Token (needs `repo` scope)
+- GitHub repository in `owner/repo` format (auto-fills from pasted GitHub URL)
 - ✅ "Test Connection" — calls GitHub `/user` endpoint
-- Link: *"Generate at github.com/settings/tokens"*
 
-**Step 4 — Google Play Store**
-- File upload input for Service Account JSON
-- ✅ "Validate JSON" — checks required fields are present
-- Link: *"See guide below for how to get this file"*
-
-**Step 5 — Project Setup**
-- Flutter project path or GitHub repo URL
-- Default branch name
-- Play Store package name (e.g. `com.example.myapp`)
-- ✅ "Verify Flutter Project" — checks pubspec.yaml exists
+**Step 4 — Flutter Project**
+- Flutter project path — native OS folder picker (Browse button), or type manually
+- Default branch — auto-detected from git in the selected folder
+- Android emulator — auto-detected from installed AVDs via `emulator -list-avds`, shown as dropdown; falls back to text input if none found
+- ✅ "Verify Flutter Project" — checks pubspec.yaml exists at the given path
 
 On final submit:
-- CLI stores UiPath PAT locally in `~/.mopot/config.json` (encrypted)
-- All other secrets pushed to UiPath Orchestrator via API
+- Config stored in `~/.mopot/config.json`
 - Local server shuts down
 - Terminal prints: `✅ Mopot is ready. Pipeline will trigger on your next push.`
 
@@ -422,7 +378,7 @@ On final submit:
 
 ### 11.1 Anthropic API Key
 
-**What it's for:** Claude Code calls (testing, fixing, asset generation)
+**What it's for:** Claude API calls (testing, fixing)
 
 **Steps:**
 1. Go to `https://console.anthropic.com`
@@ -474,37 +430,7 @@ On final submit:
 
 ---
 
-### 11.4 Google Play Service Account JSON
-
-**What it's for:** Programmatic deployment to Play Store
-
-**Steps:**
-1. Go to `https://console.cloud.google.com`
-2. Create a new project or select existing
-3. Navigate to **IAM & Admin → Service Accounts**
-4. Click **Create Service Account**
-5. Name: `mopot-deployer`
-6. Click **Create and Continue**
-7. Skip role assignment for now → click **Done**
-8. Click on the newly created service account
-9. Go to **Keys** tab → **Add Key → Create new key**
-10. Select **JSON** → click **Create**
-11. JSON file downloads automatically — this is your credential file
-
-**Then link to Play Console:**
-1. Go to `https://play.google.com/console`
-2. Navigate to **Setup → API access**
-3. Click **Link to a Google Cloud Project** → select the project you just used
-4. Under **Service Accounts**, you should see `mopot-deployer`
-5. Click **Grant Access**
-6. Assign role: **Release Manager**
-7. Click **Invite user**
-
-**Upload this JSON file in Mopot's setup wizard Step 4.**
-
----
-
-### 11.5 UiPath Robot — Local Installation
+### 11.4 UiPath Robot — Local Installation
 
 **What it's for:** Runs Python agents on your machine, orchestrated by UiPath Cloud
 
@@ -529,11 +455,9 @@ All secrets are stored in UiPath Orchestrator and injected at runtime. Never com
 # Injected by UiPath Orchestrator into Python agents at runtime
 ANTHROPIC_API_KEY=sk-ant-api03-...
 GITHUB_TOKEN=ghp_...
-PLAY_STORE_JSON_PATH=/tmp/mopot/play_store_credentials.json
 FLUTTER_PROJECT_PATH=/path/to/project
 GITHUB_REPO=owner/repo-name
 GITHUB_DEFAULT_BRANCH=main
-PLAY_STORE_PACKAGE_NAME=com.example.yourapp
 
 # UiPath connection (stored locally in ~/.mopot/config.json)
 UIPATH_ACCOUNT_URL=https://cloud.uipath.com/yourorg
@@ -548,13 +472,13 @@ UIPATH_FOLDER_NAME=Mopot
 
 | Criterion | How Mopot Addresses It |
 |---|---|
-| Business Impact | Every mobile dev team has this pain. Saves 3–6 hours per release. Immediate ROI story. |
-| Platform Usage | Maestro BPMN + Test Cloud + Action Center + Orchestrator Credential Store + Robot + Claude Code (bonus points) |
+| Business Impact | Every mobile dev team has this pain. Saves 2–4 hours per release cycle. Immediate ROI story. |
+| Platform Usage | Maestro BPMN + Test Cloud + Action Center + Orchestrator Credential Store + Robot + Claude (bonus points) |
 | Technical Execution | Platform adapter pattern, retry logic, human gates, exception handling at every step |
-| Completeness | End-to-end: push → test → fix → deploy. Full GitHub repo + README + demo video. |
+| Completeness | End-to-end: push → test → fix → PR. Full GitHub repo + README + demo video. |
 | Creativity | Only mobile-native testing pipeline in the submissions. Everyone else builds CRUD workflows. |
 | Presentation | Live demo on a real Flutter app. Clear before/after story. |
-| Coding Agents Bonus | Claude Code is the primary agent for testing, fixing, and asset generation |
+| Coding Agents Bonus | Claude is the primary agent for both testing and fixing |
 
 ---
 
@@ -576,19 +500,18 @@ Build these. Nothing else.
 
 **In scope (v1.0 — hackathon):**
 - CLI with `init`, `status`, `run`, `logs`
-- Setup wizard UI (localhost)
+- Setup wizard UI (localhost) with auto-detection of AVDs, git branch, and folder picker
 - Android adapter (ADB + emulator)
-- Claude Code tester agent
-- Claude Code fixer agent (opens PR)
-- UiPath Test Cloud integration (flutter test)
+- Claude tester agent (vision loop — finds bugs)
+- Claude fixer agent (writes fixes, opens PR)
+- UiPath Test Cloud integration (flutter test → JUnit XML)
 - UiPath Action Center gates (2 approval points)
-- Play Store deployment agent
 - GitHub webhook trigger
-- Release notes generation
 
 **Out of scope (post-hackathon):**
 - iOS adapter
 - React Native adapter
+- Play Store deployment
 - Multi-project support
 - Team/organization accounts
 - Dashboard web UI
@@ -606,7 +529,7 @@ Build these. Nothing else.
 **PROMPT FOR CLAUDE CODE:**
 
 ```
-You are building Mopot — an autonomous mobile release pipeline agent.
+You are building Mopot — an autonomous mobile test + fix pipeline agent.
 Read this entire document before writing any code.
 
 Tech context:
@@ -615,12 +538,11 @@ Tech context:
 - AI calls: Anthropic API (ANTHROPIC_API_KEY env var)
 - Orchestration: UiPath Automation Cloud (do not build this — configure via UI)
 - Mobile: ADB + Android Emulator + Flutter CLI
-- Deployment: Google Play Developer API (google-api-python-client)
 
 Start with this order:
 1. Scaffold the repo structure exactly as defined in Section 7
 2. Implement platforms/base_adapter.py exactly as defined in Section 8
-3. Implement platforms/android_adapter.py — a full working implementation of base_adapter.py using ADB commands and Flutter CLI
+3. Implement platforms/android_adapter.py — a full working implementation using ADB commands and Flutter CLI
 4. Implement platforms/ios_adapter.py as a STUB — every method raises NotImplementedError with a clear message
 5. Implement platforms/react_native_adapter.py as a STUB — same pattern
 6. Implement agents/tester_agent.py — uses ANTHROPIC_API_KEY, receives flutter project path, launches the android adapter, navigates the app, captures screenshots, returns a structured bug report as JSON
@@ -641,5 +563,5 @@ Rules:
 
 ---
 
-*Document version 1.0 — Daniel Ainoko / thecodedaniel*  
+*Document version 1.1 — Daniel Ainoko / thecodedaniel*  
 *Built for UiPath AgentHack 2026 — Track 3: UiPath Test Cloud*
