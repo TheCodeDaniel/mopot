@@ -1,8 +1,8 @@
 # Mopot
 
-**Push code. Mopot ships it.**
+**Push code. Mopot finds the bugs and opens the PR.**
 
-Mopot is an autonomous mobile release pipeline agent. A developer pushes code to GitHub and Mopot handles everything else — it tests the Flutter/Android app using Claude AI, finds bugs, opens a PR with fixes, and deploys to the Google Play Store. Humans stay in control through two approval gates powered by UiPath Action Center.
+Mopot is an autonomous mobile test + fix pipeline agent. A developer pushes code to GitHub and Mopot handles the hard parts — it builds the Flutter/Android app, navigates it with Claude AI vision to find bugs, writes code fixes, and opens a Pull Request. Humans stay in control through two approval gates powered by UiPath Action Center.
 
 Built for **UiPath AgentHack 2026 — Track 3: UiPath Test Cloud**.
 
@@ -23,10 +23,8 @@ GitHub push
     ├─ Claude writes code fixes → commits → opens GitHub PR
     ├─ Retest on fixed build
     │
-    ├─ HUMAN GATE 2: Approve deployment? (UiPath Action Center)
-    │
-    ├─ Claude generates release notes + Play Store descriptions
-    └─ Google Play Developer API submits APK to internal testing
+    └─ HUMAN GATE 2: Fix PR is ready for review.
+                     All tests passing. Merge the PR?
 ```
 
 ---
@@ -61,7 +59,7 @@ npm install -g .
 mopot init
 ```
 
-This opens a browser UI at `http://localhost:3420` where you configure all credentials in 5 steps.
+This opens a browser UI at `http://localhost:3420` where you configure all credentials in 4 steps.
 
 ### 3. Start the pipeline server
 
@@ -108,8 +106,6 @@ All secrets are injected at runtime. Copy `.env.example` to `.env` and fill in y
 ```bash
 ANTHROPIC_API_KEY=sk-ant-api03-...
 GITHUB_TOKEN=ghp_...
-PLAY_STORE_JSON_PATH=/path/to/play_store_credentials.json
-PLAY_STORE_PACKAGE_NAME=com.example.yourapp
 FLUTTER_PROJECT_PATH=/path/to/flutter/project
 GITHUB_REPO=owner/repo-name
 GITHUB_DEFAULT_BRANCH=main
@@ -130,11 +126,9 @@ mopot/
 │   ├── index.js
 │   ├── commands/               init, config, status, run, logs
 │   └── server/                 Express setup wizard + HTML UI
-├── agents/                     Python agents (Claude + Play Store)
+├── agents/                     Python agents (Claude)
 │   ├── tester_agent.py         Claude vision loop — finds bugs
-│   ├── fixer_agent.py          Claude fixes code — opens PR
-│   ├── asset_agent.py          Claude writes release notes
-│   └── deployer_agent.py       Play Store API submission
+│   └── fixer_agent.py          Claude fixes code — opens PR
 ├── platforms/                  Mobile platform adapter layer
 │   ├── base_adapter.py         Abstract interface (do not modify)
 │   ├── android_adapter.py      ADB + Flutter CLI (active)
@@ -161,7 +155,7 @@ mopot/
 |---|---|
 | **Maestro BPMN** | Pipeline coordination — import `uipath/maestro_process.json` |
 | **Test Cloud** | Formal test execution — import `uipath/test_cloud_config.json` |
-| **Action Center** | Human approval gates (Gate 1: fix? Gate 2: deploy?) |
+| **Action Center** | Human approval gates (Gate 1: fix? Gate 2: merge PR?) |
 | **Orchestrator Assets** | Encrypted secret storage for all API keys |
 | **Robot** | Executes Python agents on your local machine |
 | **Agent Builder** | Action definitions — import `uipath/agent_builder/agent_config.json` |

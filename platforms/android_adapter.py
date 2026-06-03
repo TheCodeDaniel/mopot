@@ -13,7 +13,6 @@ from typing import List, Optional
 from platforms.base_adapter import (
     BuildResult,
     CrashLog,
-    DeployResult,
     EmulatorSession,
     MobilePlatformAdapter,
     ScreenshotResult,
@@ -182,12 +181,6 @@ class AndroidAdapter(MobilePlatformAdapter):
             return {"events": events, "exit_code": result.returncode, "raw": result.stdout}
         except json.JSONDecodeError:
             return {"events": [], "exit_code": result.returncode, "raw": result.stdout, "stderr": result.stderr}
-
-    def deploy(self, artifact_path: str, store_config: dict) -> DeployResult:
-        raise NotImplementedError(
-            "Use deployer_agent.py for Play Store deployment. "
-            "AndroidAdapter.deploy() is intentionally not implemented."
-        )
 
     def teardown(self, session: EmulatorSession) -> bool:
         result = _run([_ADB, "-s", session.device_id, "emu", "kill"])

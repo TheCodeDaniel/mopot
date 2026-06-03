@@ -17,7 +17,6 @@ from fastapi.responses import JSONResponse
 # Ensure project root is importable when run directly
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agents.asset_agent import run_asset_agent
 from agents.fixer_agent import run_fixer
 from agents.tester_agent import run_tester
 from platforms.android_adapter import AndroidAdapter
@@ -116,20 +115,6 @@ async def _run_pipeline(run_context: dict) -> None:
                 if not build_result.success:
                     break
                 run_context["apk_path"] = build_result.artifact_path
-
-        # STEP 4 — Asset generation
-        _update_run(run_id, {"status": "assets"})
-        asset_package = run_asset_agent(run_context, bug_report or {})
-        _update_run(run_id, {"assets": asset_package})
-
-        # STEP 5 — Deployment (only when Play Store credentials are configured)
-        if os.environ.get("PLAY_STORE_JSON_PATH") and os.environ.get("PLAY_STORE_PACKAGE_NAME"):
-            from agents.deployer_agent import run_deployer
-            _update_run(run_id, {"status": "deploying"})
-            deploy_result = run_deployer(run_context, asset_package)
-            _update_run(run_id, {"deploy_result": dataclasses.asdict(deploy_result)})
-        else:
-            _update_run(run_id, {"deploy_result": {"skipped": True, "reason": "Play Store credentials not configured"}})
 
         _update_run(run_id, {"status": "complete"})
 

@@ -1,8 +1,8 @@
 {
-  "_comment": "UiPath Agent Builder configuration for Mopot. Defines the four Python agents as callable actions.",
+  "_comment": "UiPath Agent Builder configuration for Mopot. Defines the two Python agents as callable actions.",
   "agent": {
     "name": "Mopot Pipeline Agent",
-    "description": "Autonomous mobile release pipeline — tests, fixes, and deploys Flutter apps.",
+    "description": "Autonomous mobile test + fix pipeline — tests Flutter apps with Claude vision and opens fix PRs.",
     "version": "1.0.0",
     "runtime": "python3.11",
     "working_directory": "${MOPOT_AGENT_DIR}"
@@ -63,62 +63,11 @@
           "fixes_applied": {"type": "array"}
         }
       }
-    },
-    {
-      "id": "run_asset_agent",
-      "name": "Generate Release Assets",
-      "description": "Use Claude to generate Play Store release notes and descriptions from git history.",
-      "entry_point": "agents/asset_agent.py",
-      "function": "run_asset_agent",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "run_context": {"type": "object"},
-          "bug_report": {"type": "object"}
-        },
-        "required": ["run_context", "bug_report"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "release_notes": {"type": "string"},
-          "short_description": {"type": "string"},
-          "full_description": {"type": "string"},
-          "whats_new": {"type": "string"},
-          "screenshots": {"type": "array", "items": {"type": "string"}}
-        }
-      }
-    },
-    {
-      "id": "run_deployer",
-      "name": "Deploy to Play Store",
-      "description": "Upload APK and metadata to Google Play Store internal testing track.",
-      "entry_point": "agents/deployer_agent.py",
-      "function": "run_deployer",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "run_context": {"type": "object"},
-          "asset_package": {"type": "object"}
-        },
-        "required": ["run_context", "asset_package"]
-      },
-      "output_schema": {
-        "type": "object",
-        "properties": {
-          "success": {"type": "boolean"},
-          "track": {"type": "string"},
-          "version_code": {"type": "integer"},
-          "error": {"type": ["string", "null"]}
-        }
-      }
     }
   ],
   "credentials_required": [
     "ANTHROPIC_API_KEY",
     "GITHUB_TOKEN",
-    "PLAY_STORE_JSON_PATH",
-    "PLAY_STORE_PACKAGE_NAME",
     "FLUTTER_PROJECT_PATH",
     "GITHUB_REPO"
   ],

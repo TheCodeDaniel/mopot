@@ -35,14 +35,6 @@ class CrashLog:
     screen: Optional[str] = None
 
 
-@dataclass
-class DeployResult:
-    success: bool
-    track: str
-    version_code: int
-    error: Optional[str] = None
-
-
 class MobilePlatformAdapter(ABC):
 
     @abstractmethod
@@ -78,11 +70,6 @@ class MobilePlatformAdapter(ABC):
     @abstractmethod
     def run_tests(self, project_path: str) -> dict:
         """Execute test suite and return results."""
-        pass
-
-    @abstractmethod
-    def deploy(self, artifact_path: str, store_config: dict) -> DeployResult:
-        """Submit build to app store."""
         pass
 
     @abstractmethod

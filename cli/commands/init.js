@@ -30,7 +30,7 @@ const initCommand = new Command('init')
 
     server.listen(port, () => {
       spinner.succeed(`Setup wizard running at ${chalk.cyan(`http://localhost:${port}`)}`);
-      console.log(chalk.gray('Complete all 5 steps in the browser, then return here.'));
+      console.log(chalk.gray('Complete all 4 steps in the browser, then return here.'));
       open(`http://localhost:${port}`);
     });
 

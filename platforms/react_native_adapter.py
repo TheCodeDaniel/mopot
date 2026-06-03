@@ -5,7 +5,6 @@ from typing import List
 from platforms.base_adapter import (
     BuildResult,
     CrashLog,
-    DeployResult,
     EmulatorSession,
     MobilePlatformAdapter,
     ScreenshotResult,
@@ -35,9 +34,6 @@ class ReactNativeAdapter(MobilePlatformAdapter):
         raise NotImplementedError(_NOT_IMPLEMENTED)
 
     def run_tests(self, project_path: str) -> dict:
-        raise NotImplementedError(_NOT_IMPLEMENTED)
-
-    def deploy(self, artifact_path: str, store_config: dict) -> DeployResult:
         raise NotImplementedError(_NOT_IMPLEMENTED)
 
     def teardown(self, session: EmulatorSession) -> bool:

@@ -2,7 +2,7 @@
   "_comment": "Mopot — UiPath Maestro BPMN Process Definition. Import this into UiPath Automation Cloud > Maestro > New Process.",
   "name": "Mopot Pipeline",
   "version": "1.0.0",
-  "description": "Autonomous mobile release pipeline: GitHub push → Test → Fix → Deploy",
+  "description": "Autonomous mobile test + fix pipeline: GitHub push → Test → Fix → PR",
   "trigger": {
     "type": "webhook",
     "name": "GitHub Push Webhook",
@@ -80,12 +80,12 @@
       },
       {
         "id": "action_gate_2",
-        "name": "Human Approval — Deploy?",
+        "name": "Human Approval — Merge PR?",
         "type": "ActionCenter",
         "config": {
-          "task_type": "ApproveDeployment",
-          "title": "All tests passing — approve deployment to Play Store?",
-          "description": "Review the fix summary and test results below, then approve or reject deployment.",
+          "task_type": "ApprovePRMerge",
+          "title": "Fix PR is ready for review. All tests passing. Merge the PR?",
+          "description": "Review the fix summary, test results, and the open Pull Request below, then approve or reject the merge.",
           "data_fields": [
             {"name": "fix_summary", "value": "${fix_result}"},
             {"name": "test_results", "value": "${retest_result}"},
@@ -97,40 +97,16 @@
         "depends_on": ["task_retest"]
       },
       {
-        "id": "task_assets",
-        "name": "Generate Release Assets (Claude)",
-        "type": "InvokeProcess",
-        "config": {
-          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
-          "body": {"action": "assets", "run_id": "${run_id}"},
-          "output_variable": "asset_package"
-        },
-        "depends_on": ["action_gate_2"],
-        "condition": "${action_gate_2.approved} == true"
-      },
-      {
-        "id": "task_deploy",
-        "name": "Deploy to Play Store",
-        "type": "InvokeProcess",
-        "config": {
-          "endpoint": "POST http://localhost:${MOPOT_PORT}/trigger",
-          "body": {"action": "deploy", "run_id": "${run_id}"},
-          "credential_assets": ["PLAY_STORE_JSON"],
-          "output_variable": "deploy_result"
-        },
-        "depends_on": ["task_assets"]
-      },
-      {
         "id": "task_notify",
         "name": "Notify Developer",
         "type": "SendEmail",
         "config": {
           "to": "${DEVELOPER_EMAIL}",
-          "subject": "Mopot: Release ${run_id} ${deploy_result.success ? 'shipped' : 'failed'}",
+          "subject": "Mopot: Fix PR ready for ${run_id} — ${fix_result.pr_url}",
           "body_template": "email_notification.html",
           "credential_assets": ["SMTP_CREDENTIALS"]
         },
-        "depends_on": ["task_deploy"]
+        "depends_on": ["action_gate_2"]
       }
     ],
     "variables": {
@@ -143,12 +119,10 @@
   "credential_assets_required": [
     "ANTHROPIC_API_KEY",
     "GITHUB_TOKEN",
-    "PLAY_STORE_JSON",
     "WEBHOOK_SECRET",
     "FLUTTER_PROJECT_PATH",
     "GITHUB_REPO",
     "GITHUB_DEFAULT_BRANCH",
-    "PLAY_STORE_PACKAGE_NAME",
     "DEVELOPER_EMAIL"
   ],
   "_setup_instructions": [

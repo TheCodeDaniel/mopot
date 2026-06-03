@@ -81,25 +81,6 @@ export function createWizardServer() {
     }
   });
 
-  // Validate Play Store JSON
-  app.post('/validate-play-json', async (req, res) => {
-    const { content } = req.body;
-    try {
-      const parsed = JSON.parse(content);
-      const required = ['type', 'project_id', 'client_email', 'private_key'];
-      const missing = required.filter(k => !parsed[k]);
-      if (missing.length > 0) {
-        return res.json({ ok: false, error: `Missing fields: ${missing.join(', ')}` });
-      }
-      if (parsed.type !== 'service_account') {
-        return res.json({ ok: false, error: 'type must be "service_account"' });
-      }
-      res.json({ ok: true, client_email: parsed.client_email });
-    } catch {
-      res.json({ ok: false, error: 'Invalid JSON' });
-    }
-  });
-
   // Verify Flutter project
   app.post('/verify-flutter', async (req, res) => {
     const { projectPath } = req.body;
