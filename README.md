@@ -59,7 +59,7 @@ npm install -g .
 mopot init
 ```
 
-This opens a browser UI at `http://localhost:3420` where you configure all credentials in 4 steps.
+This opens a browser UI at `http://localhost:3420` where you configure all credentials in 4 steps. The wizard auto-detects your installed Android emulators, reads your git default branch from the selected project folder, and provides a native OS folder picker — so most of Step 4 fills itself in.
 
 ### 3. Start the pipeline server
 
